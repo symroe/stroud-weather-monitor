@@ -58,7 +58,7 @@ jobs:
           command: "pipenv install"
       - run:
           name: Deploy
-          command: "sam deploy"
+          command: "pipenv run sam-deploy"
       - save_cache:
           when: on_success
           paths:
@@ -77,3 +77,4 @@ workflows:
       - deploy:
           requires:
             - build
+          context: [ stroud-weather-monitor ]

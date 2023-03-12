@@ -5,9 +5,12 @@ name = "pypi"
 
 [packages]
 aws-sam-cli = "*"
-cargo-lambda = "*"
 
 [dev-packages]
+cargo-lambda = "*"
 
 [requires]
 python_version = "3.10"
+
+[scripts]
+sam-deploy = "sam deploy"
