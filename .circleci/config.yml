@@ -1,0 +1,79 @@
+version: 2.1
+
+jobs:
+  test:
+    docker:
+      - image: cimg/rust:1.67.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - cargo-v1-{{ checksum "Cargo.toml" }}
+      - run: cargo --version
+      - run:
+          name: Run Tests
+          command: "cargo test"
+      - save_cache:
+          key: cargo-v1-{{ checksum "Cargo.toml" }}
+          paths:
+            - ~/.cargo
+  build:
+    docker:
+      - image: cimg/rust:1.67.0
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - cargo-v1-{{ checksum "Cargo.toml" }}
+      - run:
+          name: Install Rust deps
+          command: make ci-install-deps
+      - run:
+          name: Build
+          command: "make build"
+      - persist_to_workspace:
+          root: build
+          paths:
+            - bootstrap
+      - save_cache:
+          key: cargo-v1-{{ checksum "Cargo.toml" }}
+          paths:
+            - ~/.cargo
+
+  deploy:
+    docker:
+      - image: cimg/python:3.10
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - restore_cache:
+          keys:
+            - pipenv-v1-{{ checksum "Pipfile.lock" }}
+      - run:
+          name: Install Pipenv
+          command: "pip install -U pip pipenv"
+      - run:
+          name: Install Pipenv requirements
+          command: "pipenv install"
+      - run:
+          name: Deploy
+          command: "sam deploy"
+      - save_cache:
+          when: on_success
+          paths:
+            - ~/.local/share/virtualenvs/
+          key: pipenv-v1-{{ checksum "Pipfile.lock" }}
+
+
+workflows:
+  version: 2
+  test_build_deploy:
+    jobs:
+      - test
+      - build:
+          requires:
+            - test
+      - deploy:
+          requires:
+            - build
