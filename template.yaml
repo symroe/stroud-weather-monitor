@@ -20,11 +20,31 @@ Resources:
       Architectures:
         - x86_64
       Events:
-        TTNWebhook:
-          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+        HTTPRequests:
+          Type: Api
           Properties:
-            Path: /webhook
-            Method: PUT
+            Path: /{proxy+}
+            Method: ANY
+          HTTPRequestRoots:
+            Type: Api
+            Properties:
+              Path: /
+              Method: ANY
+  DynamoDBTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      TableName: TemperatureReadings
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      ProvisionedThroughput:
+        WriteCapacityUnits: 5
+        ReadCapacityUnits: 5
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - KeyType: HASH
+          AttributeName: id
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
