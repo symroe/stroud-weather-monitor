@@ -19,6 +19,8 @@ Resources:
       Runtime: provided.al2
       Architectures:
         - x86_64
+      Policies:
+        - AmazonDynamoDBFullAccess
       Events:
         HTTPRequests:
           Type: Api
@@ -45,6 +47,7 @@ Resources:
       KeySchema:
         - KeyType: HASH
           AttributeName: id
+
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
