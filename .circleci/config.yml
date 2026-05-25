@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   test:
     docker:
-      - image: cimg/rust:1.67.0
+      - image: cimg/rust:1.88.0
     steps:
       - checkout
       - restore_cache:
@@ -19,7 +19,7 @@ jobs:
             - ~/.cargo
   build:
     docker:
-      - image: cimg/rust:1.67.0
+      - image: cimg/rust:1.88.0
     steps:
       - checkout
       - restore_cache:
