@@ -42,22 +42,27 @@ async fn write_to_dynamodb(json_string: &String) -> Result<(), AwsError> {
     let client = Client::new(&config);
 
     let data: serde_json::Value = serde_json::from_str(json_string).unwrap();
-    let device_id = &data["end_device_ids"]["device_id"];
-    let timestamp = &data["uplink_message"]["settings"]["time"];
-    let tempc_ds = &data["uplink_message"]["decoded_payload"]["TempC_SHT"];
-    let humidity = &data["uplink_message"]["decoded_payload"]["Hum_SHT"];
-    let data_map = HashMap::from([
-        ( "id".to_string(), AttributeValue::S(timestamp.to_string(),),),
-        ( "device_id".to_string(), AttributeValue::S(device_id.to_string(),),),
-        ( "timestamp".to_string(), AttributeValue::S(timestamp.to_string(),),),
-        ( "tempc_ds".to_string(), AttributeValue::S(tempc_ds.to_string(),),),
-        ( "humidity".to_string(), AttributeValue::S(humidity.to_string(),),),
-    ],);
+    let uplink = &data["data"]["uplink_message"];
+    let device_id = data["data"]["end_device_ids"]["device_id"].as_str().unwrap_or("").to_string();
+    let timestamp = uplink["settings"]["time"].as_str().unwrap_or("").to_string();
+
+    let mut item = HashMap::from([
+        ("device_id".to_string(), AttributeValue::S(device_id)),
+        ("timestamp".to_string(), AttributeValue::S(timestamp)),
+    ]);
+
+    let decoded = &uplink["decoded_payload"];
+    if let Some(temp) = decoded["temperature"].as_f64() {
+        item.insert("tempc_ds".to_string(), AttributeValue::N(temp.to_string()));
+    }
+    if let Some(hum) = decoded["Hum_SHT"].as_f64() {
+        item.insert("humidity".to_string(), AttributeValue::N(hum.to_string()));
+    }
 
     let request = client
         .put_item()
-        .table_name("TemperatureReadings")
-        .set_item(Some(data_map));
+        .table_name("TemperatureReadings_v2")
+        .set_item(Some(item));
     request.send().await?;
 
     Ok(())
