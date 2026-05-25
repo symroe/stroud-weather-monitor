@@ -43,8 +43,21 @@ async fn write_to_dynamodb(json_string: &String) -> Result<(), AwsError> {
 
     let data: serde_json::Value = serde_json::from_str(json_string).unwrap();
     let uplink = &data["data"]["uplink_message"];
-    let device_id = data["data"]["end_device_ids"]["device_id"].as_str().unwrap_or("").to_string();
-    let timestamp = uplink["settings"]["time"].as_str().unwrap_or("").to_string();
+
+    let device_id = match data["data"]["end_device_ids"]["device_id"].as_str() {
+        Some(s) if !s.is_empty() => s.to_string(),
+        _ => {
+            eprintln!("Skipping record: missing device_id. Payload: {}", json_string);
+            return Ok(());
+        }
+    };
+    let timestamp = match uplink["settings"]["time"].as_str() {
+        Some(s) if !s.is_empty() => s.to_string(),
+        _ => {
+            eprintln!("Skipping record: missing timestamp. Payload: {}", json_string);
+            return Ok(());
+        }
+    };
 
     let mut item = HashMap::from([
         ("device_id".to_string(), AttributeValue::S(device_id)),
