@@ -26,6 +26,9 @@ jobs:
           keys:
             - cargo-v1-{{ checksum "Cargo.toml" }}
       - run:
+          name: Install musl tools
+          command: sudo apt-get update && sudo apt-get install -y musl-tools
+      - run:
           name: Install Rust deps
           command: make ci-install-deps
       - run:

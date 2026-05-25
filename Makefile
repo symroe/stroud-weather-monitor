@@ -8,7 +8,8 @@ ci-install-deps: cargo-lambda
 
 .PHONY: build
 build:
-	./cargo-lambda lambda build --release --compiler cargo
+	rustup target add x86_64-unknown-linux-musl
+	./cargo-lambda lambda build --release --target x86_64-unknown-linux-musl --compiler cargo
 	rm -rf ./build
 	mkdir -p ./build
 	cp -v ./target/lambda/lora-monitor/bootstrap ./build/bootstrap
