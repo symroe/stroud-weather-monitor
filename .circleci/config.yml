@@ -49,21 +49,21 @@ jobs:
           at: build
       - restore_cache:
           keys:
-            - pipenv-v1-{{ checksum "Pipfile.lock" }}
+            - uv-v1-{{ checksum "pyproject.toml" }}
       - run:
-          name: Install Pipenv
-          command: "pip install -U pip pipenv"
+          name: Install uv
+          command: pip install uv
       - run:
-          name: Install Pipenv requirements
-          command: "pipenv install"
+          name: Install dependencies
+          command: uv sync --no-group dev
       - run:
           name: Deploy
-          command: "pipenv run sam-deploy"
+          command: uv run sam deploy
       - save_cache:
           when: on_success
           paths:
-            - ~/.local/share/virtualenvs/
-          key: pipenv-v1-{{ checksum "Pipfile.lock" }}
+            - ~/.cache/uv
+          key: uv-v1-{{ checksum "pyproject.toml" }}
 
 
 workflows:

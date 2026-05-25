@@ -1,0 +1,17 @@
+[project]
+name = "stroud-weather-monitor"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "aws-sam-cli",
+    "ziglang>=0.16.0",
+]
+
+[dependency-groups]
+dev = [
+    "cargo-lambda",
+]
+
+[tool.uv]
+package = false
+
