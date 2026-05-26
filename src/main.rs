@@ -42,9 +42,18 @@ async fn write_to_dynamodb(json_string: &String) -> Result<(), AwsError> {
     let client = Client::new(&config);
 
     let data: serde_json::Value = serde_json::from_str(json_string).unwrap();
-    let uplink = &data["data"]["uplink_message"];
 
-    let device_id = match data["data"]["end_device_ids"]["device_id"].as_str() {
+    // TTN sends two formats: wrapped in a "data" envelope, or as a bare uplink message
+    let (end_device_ids, uplink) = if data["data"]["uplink_message"].is_object() {
+        (&data["data"]["end_device_ids"], &data["data"]["uplink_message"])
+    } else if data["uplink_message"].is_object() {
+        (&data["end_device_ids"], &data["uplink_message"])
+    } else {
+        eprintln!("Skipping record: unrecognised payload shape. Payload: {}", json_string);
+        return Ok(());
+    };
+
+    let device_id = match end_device_ids["device_id"].as_str() {
         Some(s) if !s.is_empty() => s.to_string(),
         _ => {
             eprintln!("Skipping record: missing device_id. Payload: {}", json_string);
